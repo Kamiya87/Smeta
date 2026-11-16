@@ -1,0 +1,59 @@
+:root { font-family: Arial, sans-serif; color: #18212f; background: #f3f5f8; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+.sheet { max-width: 1050px; margin: 32px auto; padding: 32px; background: #fff; border-radius: 16px; box-shadow: 0 8px 32px #18212f12; }
+.page-header { display: flex; justify-content: space-between; align-items: start; gap: 24px; }
+h1 { margin: 0 0 8px; font-size: 2rem; }
+h2 { margin: 32px 0 16px; font-size: 1.3rem; }
+p { margin: 0; color: #526071; }
+button, input, select { min-height: 44px; font: inherit; }
+button { padding: 9px 16px; border: 1px solid #1659aa; border-radius: 8px; background: #1659aa; color: white; cursor: pointer; }
+button.secondary { background: white; color: #1659aa; }
+button:hover { filter: brightness(.94); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #74a9f1; outline-offset: 2px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+th { text-align: left; color: #526071; font-size: .9rem; }
+th, td { padding: 9px 8px; border-bottom: 1px solid #e2e7ee; }
+th:first-child { width: 36%; }
+th:nth-child(2) { width: 16%; }
+th:nth-child(3) { width: 19%; }
+th:nth-child(4) { width: 20%; }
+th:last-child { width: 9%; }
+td input { width: 100%; padding: 8px 10px; border: 1px solid #b9c4d0; border-radius: 7px; }
+td.amount { text-align: right; font-weight: 600; white-space: nowrap; }
+td.actions { text-align: right; }
+.remove-button { width: 44px; padding: 8px; font-size: 1.4rem; line-height: 1; }
+.add-button { margin-top: 16px; }
+.calculation { border-top: 1px solid #e2e7ee; margin-top: 30px; }
+.settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; max-width: 700px; }
+.settings label { display: grid; gap: 7px; font-weight: 600; }
+.settings input, .settings select { width: 100%; padding: 8px 10px; border: 1px solid #b9c4d0; border-radius: 7px; background: #fff; }
+.summary { max-width: 550px; margin: 28px 0 0 auto; }
+.summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid #e2e7ee; }
+.summary-row[hidden] { display: none; }
+.summary-row dd { margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.grand-total { font-size: 1.25rem; font-weight: 700; border-bottom: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 700px) {
+  .sheet { margin: 0; padding: 20px 16px; border-radius: 0; box-shadow: none; }
+  .page-header { flex-wrap: wrap; }
+  .table-wrap { overflow: visible; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  thead { display: none; }
+  tr { position: relative; padding: 14px 12px; margin-bottom: 12px; border: 1px solid #e2e7ee; border-radius: 10px; }
+  td { padding: 5px 0; border: 0; }
+  td.amount { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
+  td.amount::before { content: 'Сумма'; font-weight: 400; }
+  td.actions { position: absolute; top: 9px; right: 10px; width: 44px; }
+  td.name { padding-right: 50px; }
+  td label { display: block; margin-bottom: 5px; font-weight: 600; }
+  .settings { grid-template-columns: 1fr; }
+}
+@media (min-width: 701px) { td label { display: none; } }
+@media print {
+  :root { background: white; }
+  .sheet { margin: 0; padding: 0; max-width: none; box-shadow: none; }
+  .print-button, .add-button, .actions { display: none !important; }
+  input, select { border: 0 !important; padding-left: 0 !important; appearance: none; }
+}
