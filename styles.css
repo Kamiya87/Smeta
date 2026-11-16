@@ -3,6 +3,11 @@
 body { margin: 0; }
 .sheet { max-width: 1050px; margin: 32px auto; padding: 32px; background: #fff; border-radius: 16px; box-shadow: 0 8px 32px #18212f12; }
 .page-header { display: flex; justify-content: space-between; align-items: start; gap: 24px; }
+.page-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
+.copy-feedback { color: #17603a; font-weight: 700; }
+.manual-copy { margin-top: 18px; padding: 16px; border: 1px solid #b9c4d0; border-radius: 8px; background: #f8fafc; }
+.manual-copy label { display: block; margin-bottom: 8px; font-weight: 600; }
+.manual-copy textarea { width: 100%; padding: 10px; border: 1px solid #b9c4d0; border-radius: 7px; resize: vertical; }
 h1 { margin: 0 0 8px; font-size: 2rem; }
 h2 { margin: 32px 0 16px; font-size: 1.3rem; }
 p { margin: 0; color: #526071; }
@@ -45,6 +50,7 @@ td.actions { text-align: right; }
 @media (max-width: 700px) {
   .sheet { margin: 0; padding: 20px 16px; border-radius: 0; box-shadow: none; }
   .page-header { flex-wrap: wrap; }
+  .page-actions { justify-content: flex-start; }
   .table-wrap { overflow: visible; }
   table, tbody, tr, td { display: block; width: 100%; }
   thead { display: none; }
@@ -64,7 +70,7 @@ td.actions { text-align: right; }
   :root { background: white; color: #000; font-size: 10pt; }
   body { margin: 0; }
   .sheet { margin: 0; padding: 0; max-width: none; border-radius: 0; box-shadow: none; }
-  .page-header, .document-details, .print-button, .add-button, .actions, .settings, .calculation h2, #items-heading, .comment-section textarea, .comment-section label { display: none !important; }
+  .page-header, .manual-copy, .document-details, .print-button, .add-button, .actions, .settings, .calculation h2, #items-heading, .comment-section textarea, .comment-section label { display: none !important; }
   .print-document-header { display: block; margin-bottom: 8mm; }
   .print-document-header h1 { margin: 0 0 7mm; font-size: 18pt; }
   .print-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; }

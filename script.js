@@ -9,9 +9,13 @@ const supplierInput = document.getElementById('supplier-details');
 const customerInput = document.getElementById('customer-details');
 const commentInput = document.getElementById('comment');
 let items = [{ name: '', quantity: '', price: '' }];
+let copyFeedbackTimer;
 
-const today = new Date();
-estimateDateInput.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+function todayDate() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
+estimateDateInput.value = todayDate();
 
 function numberOrZero(value) {
   const text = String(value ?? '').trim().replace(',', '.');
@@ -28,6 +32,12 @@ function percentOrZero(value, maximum = Infinity) {
 function money(value) {
   const rounded = Math.round(Number.isFinite(value) ? value : 0);
   return `${rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} ${currencySelect.value}`;
+}
+
+function unitPrice(value) {
+  const [integer, fractional] = String(numberOrZero(value)).split('.');
+  const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return `${grouped}${fractional ? `,${fractional}` : ''} ${currencySelect.value}`;
 }
 
 function save() {
@@ -54,6 +64,72 @@ function updatePrintDocument() {
   document.getElementById('print-customer').textContent = customerInput.value.trim() || '—';
   document.getElementById('print-comment').textContent = commentInput.value;
   save();
+}
+
+function newEstimate() {
+  if (!window.confirm('Создать новую смету? Текущий черновик будет очищен.')) return;
+  const currentNumber = Number(estimateNumberInput.value.trim());
+  estimateNumberInput.value = Number.isSafeInteger(currentNumber) && currentNumber >= 0 && currentNumber < Number.MAX_SAFE_INTEGER
+    ? String(currentNumber + 1) : '1';
+  estimateDateInput.value = todayDate();
+  supplierInput.value = '';
+  customerInput.value = '';
+  commentInput.value = '';
+  discountInput.value = '0';
+  vatInput.value = '0';
+  currencySelect.value = '₸';
+  items = [{ name: '', quantity: '', price: '' }];
+  body.replaceChildren();
+  addRow(items[0]);
+  document.getElementById('manual-copy').hidden = true;
+  document.getElementById('copy-feedback').textContent = '';
+  clearTimeout(copyFeedbackTimer);
+  calculate();
+  updatePrintDocument();
+  body.querySelector('.item-name').focus();
+}
+
+function shareText() {
+  const lines = [document.getElementById('print-title').textContent];
+  items.forEach((item, index) => {
+    if (![item.name, item.quantity, item.price].some(value => String(value).trim())) return;
+    const name = item.name.trim().replace(/\s+/g, ' ') || 'Без названия';
+    const quantity = String(numberOrZero(item.quantity)).replace('.', ',');
+    const price = unitPrice(item.price);
+    const amount = body.rows[index].querySelector('.amount').textContent;
+    lines.push(`• ${name} — ${quantity} шт × ${price} = ${amount}`);
+  });
+  lines.push(`Сумма: ${document.getElementById('subtotal').textContent}`);
+  if (!document.getElementById('discount-row').hidden) {
+    lines.push(`Скидка (${percentOrZero(discountInput.value, 100)} %): ${document.getElementById('discount-amount').textContent}`);
+    lines.push(`Сумма со скидкой: ${document.getElementById('discounted-total').textContent}`);
+  }
+  if (!document.getElementById('vat-row').hidden) {
+    lines.push(`НДС (${percentOrZero(vatInput.value)} %): ${document.getElementById('vat-amount').textContent}`);
+  }
+  lines.push(`Итого к оплате: ${document.getElementById('grand-total').textContent}`);
+  return lines.join('\n');
+}
+
+async function copyForWhatsApp() {
+  const text = shareText();
+  const feedback = document.getElementById('copy-feedback');
+  const manualCopy = document.getElementById('manual-copy');
+  clearTimeout(copyFeedbackTimer);
+  feedback.textContent = '';
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+    await navigator.clipboard.writeText(text);
+    manualCopy.hidden = true;
+    feedback.textContent = 'Скопировано ✓';
+    copyFeedbackTimer = setTimeout(() => { feedback.textContent = ''; }, 2000);
+  } catch (_) {
+    const copyText = document.getElementById('copy-text');
+    copyText.value = text;
+    manualCopy.hidden = false;
+    copyText.focus();
+    copyText.select();
+  }
 }
 
 function calculate() {
@@ -163,7 +239,10 @@ currencySelect.addEventListener('change', calculate);
 for (const field of [estimateNumberInput, estimateDateInput, supplierInput, customerInput, commentInput]) {
   field.addEventListener('input', updatePrintDocument);
 }
+estimateDateInput.addEventListener('change', updatePrintDocument);
 document.getElementById('print-button').addEventListener('click', () => window.print());
+document.getElementById('new-button').addEventListener('click', newEstimate);
+document.getElementById('copy-button').addEventListener('click', copyForWhatsApp);
 
 restore();
 items.forEach(addRow);

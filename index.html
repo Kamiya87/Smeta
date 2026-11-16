@@ -14,8 +14,17 @@
         <h1>Смета</h1>
         <p>Добавьте позиции и укажите условия расчёта.</p>
       </div>
-      <button id="print-button" class="secondary print-button" type="button">Сохранить PDF</button>
+      <div class="page-actions">
+        <button id="new-button" class="secondary" type="button">Новая смета</button>
+        <button id="copy-button" type="button">Скопировать для WhatsApp</button>
+        <button id="print-button" class="secondary print-button" type="button">Сохранить PDF</button>
+        <span id="copy-feedback" class="copy-feedback" role="status" aria-live="polite"></span>
+      </div>
     </header>
+    <div id="manual-copy" class="manual-copy" hidden>
+      <label for="copy-text">Не удалось скопировать автоматически. Скопируйте текст из поля:</label>
+      <textarea id="copy-text" rows="8" readonly></textarea>
+    </div>
 
     <section class="document-details" aria-labelledby="details-heading">
       <h2 id="details-heading">Данные сметы</h2>
