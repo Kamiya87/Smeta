@@ -5,8 +5,6 @@ const discountInput = document.getElementById('discount');
 const vatInput = document.getElementById('vat');
 const estimateNumberInput = document.getElementById('estimate-number');
 const estimateDateInput = document.getElementById('estimate-date');
-const supplierInput = document.getElementById('supplier-details');
-const customerInput = document.getElementById('customer-details');
 const commentInput = document.getElementById('comment');
 let items = [{ name: '', quantity: '', price: '' }];
 let services = [];
@@ -87,8 +85,6 @@ function save() {
       vat: vatInput.value,
       estimateNumber: estimateNumberInput.value,
       estimateDate: estimateDateInput.value,
-      supplier: supplierInput.value,
-      customer: customerInput.value,
       comment: commentInput.value
     }));
   } catch (_) { /* The calculator remains usable when browser storage is unavailable. */ }
@@ -98,10 +94,6 @@ function updatePrintDocument() {
   const [year, month, day] = estimateDateInput.value.split('-');
   const date = year && month && day ? `${day}.${month}.${year}` : '';
   document.getElementById('print-title').textContent = `Коммерческое предложение № ${estimateNumberInput.value.trim() || '—'}${date ? ` от ${date}` : ''}`;
-  const printSupplier = document.getElementById('print-supplier');
-  printSupplier.textContent = supplierInput.value.trim();
-  printSupplier.parentElement.hidden = !supplierInput.value.trim();
-  document.getElementById('print-customer').textContent = customerInput.value.trim() || '—';
   document.getElementById('print-comment').textContent = commentInput.value;
   save();
 }
@@ -113,8 +105,6 @@ function newEstimate() {
   estimateNumberInput.value = Number.isSafeInteger(currentNumber) && currentNumber >= 0 && currentNumber < Number.MAX_SAFE_INTEGER
     ? String(currentNumber + 1) : '1';
   estimateDateInput.value = todayDate();
-  supplierInput.value = '';
-  customerInput.value = '';
   commentInput.value = '';
   discountInput.value = '0';
   vatInput.value = '0';
@@ -257,8 +247,6 @@ function restore() {
     vatInput.value = String(stored.vat ?? '0');
     estimateNumberInput.value = String(stored.estimateNumber ?? '1');
     if (typeof stored.estimateDate === 'string') estimateDateInput.value = stored.estimateDate;
-    supplierInput.value = String(stored.supplier ?? '');
-    customerInput.value = String(stored.customer ?? '');
     commentInput.value = String(stored.comment ?? '');
   } catch (_) { /* Ignore invalid saved data. */ }
 }
@@ -350,7 +338,7 @@ document.getElementById('add-button').addEventListener('click', () => {
 });
 discountInput.addEventListener('input', calculate);
 vatInput.addEventListener('input', calculate);
-for (const field of [estimateNumberInput, estimateDateInput, supplierInput, customerInput, commentInput]) {
+for (const field of [estimateNumberInput, estimateDateInput, commentInput]) {
   field.addEventListener('input', updatePrintDocument);
 }
 estimateDateInput.addEventListener('change', updatePrintDocument);

@@ -4,12 +4,7 @@ body { margin: 0; }
 .sheet { max-width: 1050px; margin: 32px auto; padding: 32px; background: #fff; border-radius: 16px; box-shadow: 0 8px 32px #18212f12; }
 .brand-header { margin-bottom: 28px; }
 .brand-top { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
-.brand-logo { display: block; width: 130px; height: auto; flex: none; }
-.brand-names { color: #c00000; text-align: right; font-size: .86rem; font-weight: 700; line-height: 1.45; }
-.brand-names p { color: inherit; }
-.brand-requisites { margin-top: 14px; font-size: .85rem; line-height: 1.5; overflow-wrap: anywhere; }
-.brand-requisites p { color: #303b49; }
-.brand-requisites a { color: inherit; text-decoration: underline; }
+.brand-logo { display: block; width: 155px; height: auto; flex: none; filter: brightness(1.06) saturate(1.7) contrast(1.15); }
 .page-header { display: flex; justify-content: space-between; align-items: start; gap: 24px; }
 .page-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
 .copy-feedback { color: #17603a; font-weight: 700; }
@@ -26,8 +21,8 @@ button:hover { filter: brightness(.94); }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #e3a2a2; outline-offset: 2px; }
 .document-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .document-fields label { display: grid; gap: 7px; font-weight: 600; }
-.document-fields input, .document-fields textarea, .comment-section textarea { width: 100%; padding: 9px 10px; border: 1px solid #b9c4d0; border-radius: 7px; background: #fff; }
-.document-fields textarea, .comment-section textarea { resize: vertical; }
+.document-fields input, .comment-section textarea { width: 100%; padding: 9px 10px; border: 1px solid #b9c4d0; border-radius: 7px; background: #fff; }
+.comment-section textarea { resize: vertical; }
 .print-document-header, .print-cell, .print-comment { display: none; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -64,14 +59,11 @@ td.actions { text-align: right; }
 .comment-section h2 { margin-bottom: 12px; }
 .vat-note { margin-bottom: 14px; color: #18212f; }
 .comment-section label { display: block; margin-bottom: 7px; font-weight: 600; }
-.signature-block { display: flex; align-items: center; gap: 16px; margin-top: 26px; font-weight: 600; }
-.signature-image { display: block; width: 130px; height: auto; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 700px) {
   .sheet { margin: 0; padding: 20px 16px; border-radius: 0; box-shadow: none; }
   .brand-top { align-items: flex-start; flex-direction: column; gap: 10px; }
-  .brand-logo { width: 105px; }
-  .brand-names { text-align: left; font-size: .73rem; }
+  .brand-logo { width: 120px; }
   .page-header { flex-wrap: wrap; }
   .page-actions { justify-content: flex-start; }
   .table-wrap { overflow: visible; }
@@ -93,17 +85,10 @@ td.actions { text-align: right; }
   .sheet { margin: 0; padding: 0; max-width: none; border-radius: 0; box-shadow: none; }
   .brand-header { margin-bottom: 7mm; }
   .brand-top { flex-direction: row; align-items: center; gap: 8mm; }
-  .brand-logo { width: 27mm; }
-  .brand-names { margin-left: auto; text-align: right; font-size: 8pt; }
-  .brand-requisites { margin-top: 3mm; font-size: 8pt; line-height: 1.35; }
-  .brand-requisites p { color: #000; }
-  .brand-requisites a { color: #000; }
+  .brand-logo { width: 30mm; }
   .page-header, .manual-copy, .document-details, .print-button, .add-button, .actions, .settings, .calculation h2, #items-heading, .comment-section textarea, .comment-section label { display: none !important; }
   .print-document-header { display: block; margin-bottom: 6mm; }
   .print-document-header h1 { margin: 0 0 6mm; text-align: center; font-size: 16pt; }
-  .print-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; }
-  .print-parties > div { min-height: 20mm; white-space: pre-wrap; overflow-wrap: anywhere; }
-  .print-parties strong { display: block; margin-bottom: 2mm; }
   .table-wrap { overflow: visible; }
   table { display: table; width: 100%; table-layout: fixed; border-collapse: collapse; }
   .edit-table { display: none !important; }
@@ -131,6 +116,4 @@ td.actions { text-align: right; }
   .comment-section h2 { margin: 0 0 2mm; font-size: 11pt; }
   .vat-note { margin-bottom: 3mm; color: #000; }
   .print-comment { display: block; min-height: 10mm; white-space: pre-wrap; overflow-wrap: anywhere; }
-  .signature-block { display: flex; align-items: center; gap: 4mm; margin-top: 6mm; color: #000; font-weight: 400; break-inside: avoid; }
-  .signature-image { width: 36mm; }
 }
