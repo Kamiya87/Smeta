@@ -3,7 +3,15 @@ const body = document.getElementById('items-body');
 const discountInput = document.getElementById('discount');
 const vatInput = document.getElementById('vat');
 const currencySelect = document.getElementById('currency');
+const estimateNumberInput = document.getElementById('estimate-number');
+const estimateDateInput = document.getElementById('estimate-date');
+const supplierInput = document.getElementById('supplier-details');
+const customerInput = document.getElementById('customer-details');
+const commentInput = document.getElementById('comment');
 let items = [{ name: '', quantity: '', price: '' }];
+
+const today = new Date();
+estimateDateInput.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
 function numberOrZero(value) {
   const text = String(value ?? '').trim().replace(',', '.');
@@ -28,9 +36,24 @@ function save() {
       items,
       discount: discountInput.value,
       vat: vatInput.value,
-      currency: currencySelect.value
+      currency: currencySelect.value,
+      estimateNumber: estimateNumberInput.value,
+      estimateDate: estimateDateInput.value,
+      supplier: supplierInput.value,
+      customer: customerInput.value,
+      comment: commentInput.value
     }));
   } catch (_) { /* The calculator remains usable when browser storage is unavailable. */ }
+}
+
+function updatePrintDocument() {
+  const [year, month, day] = estimateDateInput.value.split('-');
+  const date = year && month && day ? `${day}.${month}.${year}` : '';
+  document.getElementById('print-title').textContent = `Смета № ${estimateNumberInput.value.trim() || '—'}${date ? ` от ${date}` : ''}`;
+  document.getElementById('print-supplier').textContent = supplierInput.value.trim() || '—';
+  document.getElementById('print-customer').textContent = customerInput.value.trim() || '—';
+  document.getElementById('print-comment').textContent = commentInput.value;
+  save();
 }
 
 function calculate() {
@@ -62,14 +85,17 @@ function calculate() {
 function addRow(item) {
   const row = document.createElement('tr');
   row.innerHTML = `
-    <td class="name"><label>Наименование</label><input class="item-name" type="text" aria-label="Наименование позиции"></td>
-    <td><label>Количество</label><input class="item-quantity" type="text" inputmode="decimal" aria-label="Количество"></td>
-    <td><label>Цена</label><input class="item-price" type="text" inputmode="decimal" aria-label="Цена"></td>
+    <td class="name"><label>Наименование</label><input class="item-name" type="text" aria-label="Наименование позиции"><span class="print-cell print-name"></span></td>
+    <td><label>Количество</label><input class="item-quantity" type="text" inputmode="decimal" aria-label="Количество"><span class="print-cell print-quantity"></span></td>
+    <td><label>Цена</label><input class="item-price" type="text" inputmode="decimal" aria-label="Цена"><span class="print-cell print-price"></span></td>
     <td class="amount">0 ₸</td>
     <td class="actions"><button class="remove-button secondary" type="button" aria-label="Удалить позицию">×</button></td>`;
   row.querySelector('.item-name').value = item.name;
   row.querySelector('.item-quantity').value = item.quantity;
   row.querySelector('.item-price').value = item.price;
+  row.querySelector('.print-name').textContent = item.name;
+  row.querySelector('.print-quantity').textContent = item.quantity;
+  row.querySelector('.print-price').textContent = item.price;
   body.append(row);
 }
 
@@ -90,6 +116,11 @@ function restore() {
     if ([...currencySelect.options].some(option => option.value === stored.currency)) {
       currencySelect.value = stored.currency;
     }
+    estimateNumberInput.value = String(stored.estimateNumber ?? '1');
+    if (typeof stored.estimateDate === 'string') estimateDateInput.value = stored.estimateDate;
+    supplierInput.value = String(stored.supplier ?? '');
+    customerInput.value = String(stored.customer ?? '');
+    commentInput.value = String(stored.comment ?? '');
   } catch (_) { /* Ignore invalid saved data. */ }
 }
 
@@ -100,6 +131,9 @@ body.addEventListener('input', event => {
   if (event.target.classList.contains('item-name')) items[index].name = event.target.value;
   if (event.target.classList.contains('item-quantity')) items[index].quantity = event.target.value;
   if (event.target.classList.contains('item-price')) items[index].price = event.target.value;
+  row.querySelector('.print-name').textContent = items[index].name;
+  row.querySelector('.print-quantity').textContent = items[index].quantity;
+  row.querySelector('.print-price').textContent = items[index].price;
   calculate();
 });
 
@@ -126,8 +160,12 @@ document.getElementById('add-button').addEventListener('click', () => {
 discountInput.addEventListener('input', calculate);
 vatInput.addEventListener('input', calculate);
 currencySelect.addEventListener('change', calculate);
+for (const field of [estimateNumberInput, estimateDateInput, supplierInput, customerInput, commentInput]) {
+  field.addEventListener('input', updatePrintDocument);
+}
 document.getElementById('print-button').addEventListener('click', () => window.print());
 
 restore();
 items.forEach(addRow);
 calculate();
+updatePrintDocument();

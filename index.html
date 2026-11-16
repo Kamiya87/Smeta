@@ -14,8 +14,34 @@
         <h1>Смета</h1>
         <p>Добавьте позиции и укажите условия расчёта.</p>
       </div>
-      <button id="print-button" class="secondary print-button" type="button">Сохранить в PDF</button>
+      <button id="print-button" class="secondary print-button" type="button">Сохранить PDF</button>
     </header>
+
+    <section class="document-details" aria-labelledby="details-heading">
+      <h2 id="details-heading">Данные сметы</h2>
+      <div class="document-fields">
+        <label for="estimate-number">Номер сметы
+          <input id="estimate-number" type="text" autocomplete="off" value="1">
+        </label>
+        <label for="estimate-date">Дата
+          <input id="estimate-date" type="date">
+        </label>
+        <label for="supplier-details">Реквизиты исполнителя
+          <textarea id="supplier-details" rows="3" placeholder="Название, адрес, ИИН/БИН, контакты"></textarea>
+        </label>
+        <label for="customer-details">Реквизиты заказчика
+          <textarea id="customer-details" rows="3" placeholder="Название, адрес, ИИН/БИН, контакты"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section class="print-document-header" aria-label="Реквизиты сметы">
+      <h1 id="print-title">Смета № 1</h1>
+      <div class="print-parties">
+        <div><strong>Исполнитель</strong><div id="print-supplier"></div></div>
+        <div><strong>Заказчик</strong><div id="print-customer"></div></div>
+      </div>
+    </section>
 
     <section aria-labelledby="items-heading">
       <h2 id="items-heading">Позиции</h2>
@@ -62,6 +88,14 @@
         <div class="summary-row grand-total"><dt>Итого к оплате</dt><dd id="grand-total">0 ₸</dd></div>
       </dl>
     </section>
+
+    <section class="comment-section" aria-labelledby="comment-heading">
+      <h2 id="comment-heading">Комментарий</h2>
+      <label class="visually-hidden" for="comment">Комментарий: сроки и условия оплаты</label>
+      <textarea id="comment" rows="4" placeholder="Сроки выполнения, условия оплаты и другие примечания"></textarea>
+      <div id="print-comment" class="print-comment"></div>
+    </section>
+    <p class="print-signature">Подпись ____________________</p>
   </main>
 </body>
 </html>
