@@ -1,15 +1,54 @@
 const STORAGE_KEY = 'smeta-data-v1';
+const SERVICES_KEY = 'hse-service-names-v1';
 const body = document.getElementById('items-body');
 const discountInput = document.getElementById('discount');
 const vatInput = document.getElementById('vat');
-const currencySelect = document.getElementById('currency');
 const estimateNumberInput = document.getElementById('estimate-number');
 const estimateDateInput = document.getElementById('estimate-date');
 const supplierInput = document.getElementById('supplier-details');
 const customerInput = document.getElementById('customer-details');
 const commentInput = document.getElementById('comment');
 let items = [{ name: '', quantity: '', price: '' }];
+let services = [];
 let copyFeedbackTimer;
+
+function loadServices() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SERVICES_KEY));
+    if (Array.isArray(saved)) {
+      services = [...new Map(saved.filter(name => typeof name === 'string' && name.trim())
+        .map(name => [name.trim().toLocaleLowerCase('ru'), name.trim()])).values()];
+    }
+  } catch (_) { services = []; }
+}
+
+function rememberService(name) {
+  const value = String(name ?? '').trim();
+  if (!value) return;
+  const key = value.toLocaleLowerCase('ru');
+  const index = services.findIndex(service => service.toLocaleLowerCase('ru') === key);
+  if (index >= 0) services[index] = value;
+  else services.push(value);
+  try { localStorage.setItem(SERVICES_KEY, JSON.stringify(services)); } catch (_) { /* Keep suggestions for this session. */ }
+}
+
+function showSuggestions(row) {
+  const input = row.querySelector('.item-name');
+  const list = row.querySelector('.service-suggestions');
+  const prefix = input.value.trim().toLocaleLowerCase('ru');
+  list.replaceChildren();
+  if (prefix) {
+    services.filter(service => service.toLocaleLowerCase('ru').startsWith(prefix)
+      && service.toLocaleLowerCase('ru') !== prefix).forEach(service => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'suggestion-button';
+      button.textContent = service;
+      list.append(button);
+    });
+  }
+  list.hidden = !list.childElementCount;
+}
 
 function todayDate() {
   const today = new Date();
@@ -31,13 +70,13 @@ function percentOrZero(value, maximum = Infinity) {
 
 function money(value) {
   const rounded = Math.round(Number.isFinite(value) ? value : 0);
-  return `${rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} ${currencySelect.value}`;
+  return `${rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} ₸`;
 }
 
 function unitPrice(value) {
   const [integer, fractional] = String(numberOrZero(value)).split('.');
   const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-  return `${grouped}${fractional ? `,${fractional}` : ''} ${currencySelect.value}`;
+  return `${grouped}${fractional ? `,${fractional}` : ''} ₸`;
 }
 
 function save() {
@@ -46,7 +85,6 @@ function save() {
       items,
       discount: discountInput.value,
       vat: vatInput.value,
-      currency: currencySelect.value,
       estimateNumber: estimateNumberInput.value,
       estimateDate: estimateDateInput.value,
       supplier: supplierInput.value,
@@ -59,15 +97,18 @@ function save() {
 function updatePrintDocument() {
   const [year, month, day] = estimateDateInput.value.split('-');
   const date = year && month && day ? `${day}.${month}.${year}` : '';
-  document.getElementById('print-title').textContent = `Смета № ${estimateNumberInput.value.trim() || '—'}${date ? ` от ${date}` : ''}`;
-  document.getElementById('print-supplier').textContent = supplierInput.value.trim() || '—';
+  document.getElementById('print-title').textContent = `Коммерческое предложение № ${estimateNumberInput.value.trim() || '—'}${date ? ` от ${date}` : ''}`;
+  const printSupplier = document.getElementById('print-supplier');
+  printSupplier.textContent = supplierInput.value.trim();
+  printSupplier.parentElement.hidden = !supplierInput.value.trim();
   document.getElementById('print-customer').textContent = customerInput.value.trim() || '—';
   document.getElementById('print-comment').textContent = commentInput.value;
   save();
 }
 
 function newEstimate() {
-  if (!window.confirm('Создать новую смету? Текущий черновик будет очищен.')) return;
+  if (!window.confirm('Создать новое коммерческое предложение? Текущий черновик будет очищен.')) return;
+  items.forEach(item => rememberService(item.name));
   const currentNumber = Number(estimateNumberInput.value.trim());
   estimateNumberInput.value = Number.isSafeInteger(currentNumber) && currentNumber >= 0 && currentNumber < Number.MAX_SAFE_INTEGER
     ? String(currentNumber + 1) : '1';
@@ -77,7 +118,6 @@ function newEstimate() {
   commentInput.value = '';
   discountInput.value = '0';
   vatInput.value = '0';
-  currencySelect.value = '₸';
   items = [{ name: '', quantity: '', price: '' }];
   body.replaceChildren();
   addRow(items[0]);
@@ -96,7 +136,7 @@ function shareText() {
     const name = item.name.trim().replace(/\s+/g, ' ') || 'Без названия';
     const quantity = String(numberOrZero(item.quantity)).replace('.', ',');
     const price = unitPrice(item.price);
-    const amount = body.rows[index].querySelector('.amount').textContent;
+    const amount = money(Math.round(numberOrZero(item.quantity) * numberOrZero(item.price)));
     lines.push(`• ${name} — ${quantity} шт × ${price} = ${amount}`);
   });
   lines.push(`Сумма: ${document.getElementById('subtotal').textContent}`);
@@ -138,7 +178,6 @@ function calculate() {
     const item = items[index];
     const amount = Math.round(numberOrZero(item.quantity) * numberOrZero(item.price));
     const safeAmount = Number.isFinite(amount) ? amount : 0;
-    row.querySelector('.amount').textContent = money(safeAmount);
     subtotal += safeAmount;
   });
   if (!Number.isFinite(subtotal)) subtotal = 0;
@@ -155,23 +194,50 @@ function calculate() {
   document.getElementById('discount-row').hidden = discount === 0;
   document.getElementById('discounted-row').hidden = discounted === 0;
   document.getElementById('vat-row').hidden = vat === 0;
+  renderPrintTable();
   save();
+}
+
+function renderPrintTable() {
+  const rows = items.map(item => {
+    const row = document.createElement('tr');
+    for (const value of [item.name, item.quantity, unitPrice(item.price)]) {
+      const cell = document.createElement('td');
+      cell.textContent = value;
+      row.append(cell);
+    }
+    return row;
+  });
+  document.getElementById('print-items-body').replaceChildren(...rows);
+}
+
+function preparePrint() {
+  [...body.rows].forEach((row, index) => {
+    const name = row.querySelector('.item-name').value;
+    const quantity = row.querySelector('.item-quantity').value;
+    const price = row.querySelector('.item-price').value;
+    items[index] = { name, quantity, price };
+    row.querySelector('.print-name').textContent = name;
+    row.querySelector('.print-quantity').textContent = quantity;
+    row.querySelector('.print-price').textContent = unitPrice(price);
+  });
+  calculate();
+  updatePrintDocument();
 }
 
 function addRow(item) {
   const row = document.createElement('tr');
   row.innerHTML = `
-    <td class="name"><label>Наименование</label><input class="item-name" type="text" aria-label="Наименование позиции"><span class="print-cell print-name"></span></td>
+    <td class="name"><label>Наименование</label><input class="item-name" type="text" aria-label="Наименование позиции" autocomplete="off"><div class="service-suggestions" aria-label="Подходящие услуги" hidden></div><span class="print-cell print-name"></span></td>
     <td><label>Количество</label><input class="item-quantity" type="text" inputmode="decimal" aria-label="Количество"><span class="print-cell print-quantity"></span></td>
-    <td><label>Цена</label><input class="item-price" type="text" inputmode="decimal" aria-label="Цена"><span class="print-cell print-price"></span></td>
-    <td class="amount">0 ₸</td>
+    <td><label class="mobile-price-label">Цена, ₸</label><div class="price-field"><input class="item-price" type="text" inputmode="decimal" aria-label="Цена, тенге"><span class="price-currency" aria-hidden="true">₸</span></div><span class="print-cell print-price"></span></td>
     <td class="actions"><button class="remove-button secondary" type="button" aria-label="Удалить позицию">×</button></td>`;
   row.querySelector('.item-name').value = item.name;
   row.querySelector('.item-quantity').value = item.quantity;
   row.querySelector('.item-price').value = item.price;
   row.querySelector('.print-name').textContent = item.name;
   row.querySelector('.print-quantity').textContent = item.quantity;
-  row.querySelector('.print-price').textContent = item.price;
+  row.querySelector('.print-price').textContent = unitPrice(item.price);
   body.append(row);
 }
 
@@ -189,9 +255,6 @@ function restore() {
     }
     discountInput.value = String(stored.discount ?? '0');
     vatInput.value = String(stored.vat ?? '0');
-    if ([...currencySelect.options].some(option => option.value === stored.currency)) {
-      currencySelect.value = stored.currency;
-    }
     estimateNumberInput.value = String(stored.estimateNumber ?? '1');
     if (typeof stored.estimateDate === 'string') estimateDateInput.value = stored.estimateDate;
     supplierInput.value = String(stored.supplier ?? '');
@@ -204,19 +267,71 @@ body.addEventListener('input', event => {
   const row = event.target.closest('tr');
   if (!row) return;
   const index = [...body.rows].indexOf(row);
-  if (event.target.classList.contains('item-name')) items[index].name = event.target.value;
+  if (event.target.classList.contains('item-name')) {
+    items[index].name = event.target.value;
+    showSuggestions(row);
+  }
   if (event.target.classList.contains('item-quantity')) items[index].quantity = event.target.value;
   if (event.target.classList.contains('item-price')) items[index].price = event.target.value;
   row.querySelector('.print-name').textContent = items[index].name;
   row.querySelector('.print-quantity').textContent = items[index].quantity;
-  row.querySelector('.print-price').textContent = items[index].price;
+  row.querySelector('.print-price').textContent = unitPrice(items[index].price);
   calculate();
 });
 
+body.addEventListener('focusin', event => {
+  if (event.target.classList.contains('item-name')) showSuggestions(event.target.closest('tr'));
+});
+
+body.addEventListener('focusout', event => {
+  const row = event.target.closest('tr');
+  if (!row) return;
+  const list = row.querySelector('.service-suggestions');
+  if (event.target.classList.contains('item-name') && !list.contains(event.relatedTarget)) {
+    rememberService(event.target.value);
+    list.hidden = true;
+  }
+  if (event.target.classList.contains('suggestion-button') && !list.contains(event.relatedTarget)) {
+    list.hidden = true;
+  }
+  if (!row.contains(event.relatedTarget)) list.hidden = true;
+});
+
+body.addEventListener('keydown', event => {
+  if (event.target.classList.contains('item-name') && event.key === 'ArrowDown') {
+    const first = event.target.closest('tr').querySelector('.suggestion-button');
+    if (first) { event.preventDefault(); first.focus(); }
+  } else if (event.target.classList.contains('suggestion-button')) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.target.closest('tr').querySelector('.service-suggestions').hidden = true;
+      event.target.closest('tr').querySelector('.item-name').focus();
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      const buttons = [...event.target.parentElement.querySelectorAll('.suggestion-button')];
+      const index = buttons.indexOf(event.target);
+      const next = buttons[index + (event.key === 'ArrowDown' ? 1 : -1)];
+      if (next) { event.preventDefault(); next.focus(); }
+    }
+  }
+});
+
 body.addEventListener('click', event => {
+  const suggestion = event.target.closest('.suggestion-button');
+  if (suggestion) {
+    const row = suggestion.closest('tr');
+    const index = [...body.rows].indexOf(row);
+    items[index].name = suggestion.textContent;
+    row.querySelector('.item-name').value = suggestion.textContent;
+    row.querySelector('.print-name').textContent = suggestion.textContent;
+    row.querySelector('.service-suggestions').hidden = true;
+    calculate();
+    row.querySelector('.item-name').focus();
+    return;
+  }
   if (!event.target.classList.contains('remove-button')) return;
   const row = event.target.closest('tr');
   const index = [...body.rows].indexOf(row);
+  rememberService(items[index].name);
   items.splice(index, 1);
   row.remove();
   if (!items.length) {
@@ -235,16 +350,21 @@ document.getElementById('add-button').addEventListener('click', () => {
 });
 discountInput.addEventListener('input', calculate);
 vatInput.addEventListener('input', calculate);
-currencySelect.addEventListener('change', calculate);
 for (const field of [estimateNumberInput, estimateDateInput, supplierInput, customerInput, commentInput]) {
   field.addEventListener('input', updatePrintDocument);
 }
 estimateDateInput.addEventListener('change', updatePrintDocument);
-document.getElementById('print-button').addEventListener('click', () => window.print());
+document.getElementById('print-button').addEventListener('click', () => {
+  preparePrint();
+  window.print();
+});
+window.addEventListener('beforeprint', preparePrint);
 document.getElementById('new-button').addEventListener('click', newEstimate);
 document.getElementById('copy-button').addEventListener('click', copyForWhatsApp);
 
 restore();
+loadServices();
+items.forEach(item => rememberService(item.name));
 items.forEach(addRow);
 calculate();
 updatePrintDocument();
