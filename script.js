@@ -336,6 +336,13 @@ document.getElementById('add-button').addEventListener('click', () => {
   calculate();
   body.lastElementChild.querySelector('.item-name').focus();
 });
+document.getElementById('clear-button').addEventListener('click', () => {
+  items = [{ name: '', quantity: '', price: '' }];
+  body.replaceChildren();
+  addRow(items[0]);
+  calculate();
+  body.querySelector('.item-name').focus();
+});
 discountInput.addEventListener('input', calculate);
 vatInput.addEventListener('input', calculate);
 for (const field of [estimateNumberInput, estimateDateInput, commentInput]) {
