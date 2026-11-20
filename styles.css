@@ -55,6 +55,8 @@ td.actions { text-align: right; }
 .summary-row[hidden] { display: none; }
 .summary-row dd { margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .grand-total { font-size: 1.25rem; font-weight: 700; border-bottom: 0; }
+.amount-words { display: block; }
+.amount-words dd { margin-top: 4px; white-space: normal; overflow-wrap: anywhere; }
 .comment-section { margin-top: 26px; }
 .comment-section h2 { margin-bottom: 12px; }
 .vat-note { margin-bottom: 14px; color: #18212f; }

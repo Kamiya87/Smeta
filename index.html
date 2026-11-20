@@ -90,8 +90,8 @@
         <label for="discount">Скидка, %
           <input id="discount" type="text" inputmode="decimal" value="0" autocomplete="off">
         </label>
-        <label for="vat">НДС, %
-          <input id="vat" type="text" inputmode="decimal" value="0" autocomplete="off">
+        <label for="vat">НДС в составе итога, %
+          <input id="vat" type="text" inputmode="decimal" value="16" autocomplete="off">
         </label>
       </div>
       <dl class="summary" aria-label="Итоговый расчёт">
@@ -100,6 +100,7 @@
         <div class="summary-row" id="discounted-row" hidden><dt>Сумма со скидкой</dt><dd id="discounted-total">0 ₸</dd></div>
         <div class="summary-row" id="vat-row" hidden><dt>НДС</dt><dd id="vat-amount">0 ₸</dd></div>
         <div class="summary-row grand-total"><dt>Итого к оплате</dt><dd id="grand-total">0 ₸</dd></div>
+        <div class="summary-row amount-words" id="amount-words-row" hidden><dt>Сумма прописью:</dt><dd id="amount-words"></dd></div>
       </dl>
     </section>
 

@@ -6,6 +6,7 @@ const vatInput = document.getElementById('vat');
 const estimateNumberInput = document.getElementById('estimate-number');
 const estimateDateInput = document.getElementById('estimate-date');
 const commentInput = document.getElementById('comment');
+const currencyInput = document.getElementById('currency');
 let items = [{ name: '', quantity: '', price: '' }];
 let services = [];
 let copyFeedbackTimer;
@@ -77,6 +78,37 @@ function unitPrice(value) {
   return `${grouped}${fractional ? `,${fractional}` : ''} ₸`;
 }
 
+function amountInWords(value) {
+  if (!Number.isSafeInteger(value) || value < 1 || value > 999999999) return '';
+  const units = ['', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'];
+  const feminineUnits = ['', 'одна', 'две', ...units.slice(3)];
+  const teens = ['десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать'];
+  const tens = ['', '', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'];
+  const hundreds = ['', 'сто', 'двести', 'триста', 'четыреста', 'пятьсот', 'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'];
+  const parts = [];
+
+  function addGroup(number, feminine, forms) {
+    if (!number) return;
+    parts.push(hundreds[Math.floor(number / 100)]);
+    const remainder = number % 100;
+    if (remainder >= 10 && remainder < 20) parts.push(teens[remainder - 10]);
+    else {
+      parts.push(tens[Math.floor(remainder / 10)]);
+      parts.push((feminine ? feminineUnits : units)[remainder % 10]);
+    }
+    if (forms) {
+      const last = remainder >= 10 && remainder < 20 ? 0 : remainder % 10;
+      parts.push(forms[last === 1 ? 0 : last >= 2 && last <= 4 ? 1 : 2]);
+    }
+  }
+
+  addGroup(Math.floor(value / 1000000), false, ['миллион', 'миллиона', 'миллионов']);
+  addGroup(Math.floor(value / 1000) % 1000, true, ['тысяча', 'тысячи', 'тысяч']);
+  addGroup(value % 1000, false);
+  const words = parts.filter(Boolean).join(' ');
+  return `${words[0].toUpperCase()}${words.slice(1)} тенге`;
+}
+
 function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -107,7 +139,7 @@ function newEstimate() {
   estimateDateInput.value = todayDate();
   commentInput.value = '';
   discountInput.value = '0';
-  vatInput.value = '0';
+  vatInput.value = '16';
   items = [{ name: '', quantity: '', price: '' }];
   body.replaceChildren();
   addRow(items[0]);
@@ -138,6 +170,8 @@ function shareText() {
     lines.push(`НДС (${percentOrZero(vatInput.value)} %): ${document.getElementById('vat-amount').textContent}`);
   }
   lines.push(`Итого к оплате: ${document.getElementById('grand-total').textContent}`);
+  const amountWordsRow = document.getElementById('amount-words-row');
+  if (!amountWordsRow.hidden) lines.push(`Сумма прописью: ${document.getElementById('amount-words').textContent}`);
   return lines.join('\n');
 }
 
@@ -174,13 +208,19 @@ function calculate() {
 
   const discount = Math.round(subtotal * percentOrZero(discountInput.value, 100) / 100);
   const discounted = subtotal - discount;
-  const vat = Math.round(discounted * percentOrZero(vatInput.value) / 100);
-  const total = discounted + vat;
+  const total = discounted;
+  const vatRate = percentOrZero(vatInput.value);
+  const vat = Math.round(total * (vatRate / (100 + vatRate)));
   document.getElementById('subtotal').textContent = money(subtotal);
   document.getElementById('discount-amount').textContent = money(discount);
   document.getElementById('discounted-total').textContent = money(discounted);
   document.getElementById('vat-amount').textContent = money(vat);
   document.getElementById('grand-total').textContent = money(total);
+  const amountWords = document.getElementById('amount-words');
+  const currency = currencyInput?.value ?? '₸';
+  const words = currency === '₸' || currency === 'KZT' ? amountInWords(Math.round(total)) : '';
+  amountWords.textContent = words;
+  document.getElementById('amount-words-row').hidden = !words;
   document.getElementById('discount-row').hidden = discount === 0;
   document.getElementById('discounted-row').hidden = discounted === 0;
   document.getElementById('vat-row').hidden = vat === 0;
@@ -244,7 +284,7 @@ function restore() {
       if (!items.length) items = [{ name: '', quantity: '', price: '' }];
     }
     discountInput.value = String(stored.discount ?? '0');
-    vatInput.value = String(stored.vat ?? '0');
+    vatInput.value = String(stored.vat ?? '16');
     estimateNumberInput.value = String(stored.estimateNumber ?? '1');
     if (typeof stored.estimateDate === 'string') estimateDateInput.value = stored.estimateDate;
     commentInput.value = String(stored.comment ?? '');
@@ -345,6 +385,7 @@ document.getElementById('clear-button').addEventListener('click', () => {
 });
 discountInput.addEventListener('input', calculate);
 vatInput.addEventListener('input', calculate);
+currencyInput?.addEventListener('change', calculate);
 for (const field of [estimateNumberInput, estimateDateInput, commentInput]) {
   field.addEventListener('input', updatePrintDocument);
 }
